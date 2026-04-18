@@ -62,7 +62,8 @@ app = Flask(
 CORS(app, origins=[
     "http://localhost:*",
     "http://127.0.0.1:*",
-    "https://lucky-belekoy-0f75e8.netlify.app",  # Netlify frontend
+    "https://project-apex-baip.onrender.com",
+    "https://lucky-belekoy-0f75e8.netlify.app",
     "https://*.netlify.app",
     "http://34.180.15.52:*",
 ])
