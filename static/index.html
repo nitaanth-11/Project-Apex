@@ -355,6 +355,17 @@ a:hover { text-decoration:underline; }
       </div>
     </section>
 
+    <!-- Hedge Funds Strategy -->
+    <section class="card full-width">
+      <div class="card-header">
+        <div class="card-title"><div class="card-title-icon rose">🛡️</div><span id="hedge-title">Hedge Fund Strategy</span></div>
+        <div class="card-badge">hedging.py → quantitative risk</div>
+      </div>
+      <div class="card-body" id="hedge-body">
+        <div class="loading-container"><div class="spinner"></div><span>Loading hedging analysis…</span></div>
+      </div>
+    </section>
+
     <!-- AI Agent -->
     <section class="card full-width">
       <div class="card-header">
@@ -423,8 +434,32 @@ function loadAll(asset) {
   document.getElementById("price-chart-title").textContent = `${asset} — Price History`;
   document.getElementById("news-title").textContent = `Latest News — ${asset}`;
   document.getElementById("agent-title").textContent = `AI Market Agent — ${asset}`;
+  document.getElementById("hedge-title").textContent = `Hedge Fund Strategy — ${asset}`;
   document.getElementById("agent-output").innerHTML = `<div class="agent-placeholder"><div class="empty-icon">🧠</div>Click <strong>"Run AI Market Agent"</strong> to generate analysis for <strong>${asset}</strong>.</div>`;
-  loadSummary(asset); loadPrices(asset); loadPredictions(asset); loadNews(asset); loadSocial(asset); loadFeatures(asset);
+  loadSummary(asset); loadPrices(asset); loadPredictions(asset); loadNews(asset); loadSocial(asset); loadFeatures(asset); loadHedging(asset);
+}
+
+/* ─── Hedging Strategy ─── */
+async function loadHedging(asset) {
+  const body=document.getElementById("hedge-body");
+  try {
+    const data=await fetchJSON(`/hedging/${asset}`);
+    if(data.error) throw new Error(data.error);
+    body.innerHTML=`
+      <div class="pred-grid" style="margin-bottom:1rem">
+        <div class="pred-item"><div class="pred-label">Market Regime</div><div class="pred-value flat">${data.regime}</div></div>
+        <div class="pred-item"><div class="pred-label">Proxy Beta</div><div class="pred-value flat">${data.beta}</div></div>
+        <div class="pred-item"><div class="pred-label">Opt. Hedge Ratio</div><div class="pred-value flat">${data.optimal_hedge_ratio}</div></div>
+      </div>
+      <div style="background:var(--bg-secondary); border:1px solid var(--border-subtle); padding:1.25rem; border-radius:var(--radius-md);">
+        <h4 style="color:var(--text-primary); margin-bottom:0.5rem; font-size:1rem;">${data.strategy_name}</h4>
+        <p style="color:var(--text-secondary); font-size:0.85rem; line-height:1.6; margin-bottom:1rem;">${data.strategy_desc}</p>
+        <div style="display:flex; gap:8px;">
+          ${data.tools.map(t=>`<span class="news-tag" style="background:rgba(244,63,94,0.1); color:var(--accent-rose); border-color:rgba(244,63,94,0.2)">${t}</span>`).join('')}
+        </div>
+      </div>
+    `;
+  } catch(e) { body.innerHTML=`<div class="error-msg">⚠️ Failed to load hedge strategy: ${e.message}</div>`; }
 }
 
 /* ─── Summary Stats ─── */

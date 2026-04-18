@@ -29,6 +29,9 @@ from typing import Optional
 
 import numpy as np
 from flask import Flask, jsonify, request, send_from_directory
+from events_pipeline import fetch_events_for_asset
+from market_agent import generate_market_report
+from hedging import get_hedging_strategy
 from flask_cors import CORS
 from pymongo import MongoClient
 from dotenv import load_dotenv
@@ -189,6 +192,28 @@ def get_features(asset: str):
     docs = list(cursor)
     docs.reverse()  # chronological order
     return jsonify(serialize(docs))
+
+
+@app.route("/api/features/<asset>", methods=["GET"])
+def api_features(asset):
+    if asset not in KNOWN_ASSETS:
+        return jsonify({"error": "Unknown asset"}), 400
+    try:
+        limit = int(request.args.get("limit", 60))
+        data = list(features_coll.find({"asset": asset}, {"_id": 0}).sort("timestamp", 1).limit(limit))
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/hedging/<asset>", methods=["GET"])
+def api_hedging(asset):
+    if asset not in KNOWN_ASSETS:
+        return jsonify({"error": "Unknown asset"}), 400
+    try:
+        data = get_hedging_strategy(asset)
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route("/api/news", methods=["GET"])
