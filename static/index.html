@@ -446,10 +446,15 @@ async function loadHedging(asset) {
     const data=await fetchJSON(`/hedging/${asset}`);
     if(data.error) throw new Error(data.error);
     body.innerHTML=`
-      <div class="pred-grid" style="margin-bottom:1rem">
+      <div class="pred-grid" style="margin-bottom:0.75rem">
         <div class="pred-item"><div class="pred-label">Market Regime</div><div class="pred-value flat">${data.regime}</div></div>
         <div class="pred-item"><div class="pred-label">Proxy Beta</div><div class="pred-value flat">${data.beta}</div></div>
         <div class="pred-item"><div class="pred-label">Opt. Hedge Ratio</div><div class="pred-value flat">${data.optimal_hedge_ratio}</div></div>
+      </div>
+      <div class="pred-grid" style="margin-bottom:1rem">
+        <div class="pred-item"><div class="pred-label">Daily VaR (95%)</div><div class="pred-value down">-${data.var_95}</div></div>
+        <div class="pred-item"><div class="pred-label">Institutional Flow</div><div class="pred-value flat" style="font-size:0.85rem">${data.institutional_flow}</div></div>
+        <div class="pred-item"><div class="pred-label">Options Bias</div><div class="pred-value flat" style="font-size:0.85rem">${data.options_bias}</div></div>
       </div>
       <div style="background:var(--bg-secondary); border:1px solid var(--border-subtle); padding:1.25rem; border-radius:var(--radius-md);">
         <h4 style="color:var(--text-primary); margin-bottom:0.5rem; font-size:1rem;">${data.strategy_name}</h4>

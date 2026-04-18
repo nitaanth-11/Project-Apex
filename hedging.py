@@ -62,17 +62,46 @@ def get_hedging_strategy(asset: str, limit: int = 50) -> dict:
             desc = "In stable markets, hedge funds adjust their Beta to match their risk appetite. If holding this asset long, they might short an index ETF to hedge out broader market risk (Alpha isolation)."
             tools = ["Index ETF Short", "Diversified Commodities"]
 
+        volume_z = recent.get("volume_zscore", 0.0)
+        sentiment = recent.get("avg_sentiment", 0.0)
+
+        # 1. Advanced Metrics: Value at Risk (VaR) 95% Confidence
+        # Basic parametric VaR = Volatility * Z-score (1.645 for 95%)
+        var_95 = volatility * 1.645
+
+        # 2. Institutional Flow Proxy
+        if volume_z > 1.5 and rsi > 55:
+            inst_flow = "Heavy Accumulation (Smart Money Buying)"
+        elif volume_z > 1.5 and rsi < 45:
+            inst_flow = "Heavy Distribution (Smart Money Selling)"
+        elif volume_z < -1.0:
+            inst_flow = "Low Liquidity (Retail Dominated)"
+        else:
+            inst_flow = "Neutral / Algorithmic Trading"
+
+        # 3. Options Skew Bias Proxy
+        if volatility > 2.0 and sentiment < -0.1:
+            options_bias = "Severe Put Skew (Downside Protection Pricing)"
+        elif volatility > 1.5 and sentiment > 0.2:
+            options_bias = "Call Skew (Speculative Upside Pricing)"
+        else:
+            options_bias = "Balanced / Flat Skew"
+
         return {
             "asset": asset,
             "regime": regime,
             "beta": str(beta),
             "volatility": f"{volatility:.2f}%",
             "optimal_hedge_ratio": f"{min(0.9, beta * 0.4):.2f}",
+            "var_95": f"{var_95:.2f}%",
+            "institutional_flow": inst_flow,
+            "options_bias": options_bias,
             "strategy_name": strategy,
             "strategy_desc": desc,
             "tools": tools,
             "timestamp": datetime.utcnow().isoformat()
         }
+
         
     except Exception as e:
         return {"error": str(e)}
