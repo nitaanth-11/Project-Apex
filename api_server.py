@@ -29,7 +29,6 @@ from typing import Optional
 
 import numpy as np
 from flask import Flask, jsonify, request, send_from_directory
-from events_pipeline import fetch_events_for_asset
 from market_agent import generate_market_report
 from hedging import get_hedging_strategy
 from flask_cors import CORS

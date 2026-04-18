@@ -148,6 +148,38 @@ def run_agent(asset: str):
     except Exception as e:
         log.error(f"Error querying Gemini API after retries: {e}")
 
+def generate_market_report(asset: str) -> str:
+    """Entry point for the Flask API router."""
+    log.info(f"Generating Market Report for API: {asset}")
+    
+    gemini_key = os.getenv("GEMINI_API_KEY")
+    if not gemini_key:
+        return "Error: GEMINI_API_KEY is not set in Environment Variables."
+        
+    gemini_client = genai.Client(api_key=gemini_key)
+    mongo_client = get_mongo_client()
+    
+    feat_doc = fetch_latest_doc(mongo_client, "features", asset)
+    soc_doc = fetch_latest_doc(mongo_client, "social_anomaly", asset)
+    pred_doc = fetch_latest_doc(mongo_client, "predictions", asset)
+    
+    prompt = format_system_prompt(asset, feat_doc, soc_doc, pred_doc)
+    
+    from tenacity import retry, stop_after_attempt, wait_exponential
+    
+    @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
+    def _call_gemini():
+        return gemini_client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt
+        )
+
+    try:
+        response = _call_gemini()
+        return response.text
+    except Exception as e:
+        return f"Error connecting to Gemini API: {str(e)}"
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="EventOracle LLM Market Agent")
     parser.add_argument("--asset", type=str, choices=KNOWN_ASSETS, help="Asset ticker to analyze")
